@@ -1,0 +1,26 @@
+services:
+  api: 
+    container_name: top-cv-api
+    image: node:25
+    working_dir: /app/api
+    environment:
+      PORT: 3000
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./api:/app/api
+    ports:
+      - ${API_PORT}:3000
+    command: ['npm', 'run', 'start:dev',]
+  db:
+    container_name: top-cv-db
+    image: postgres:17
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - ./db:/var/lib/postgresql/data

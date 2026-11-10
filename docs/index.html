@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TopCV API Documentation</title>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script type="module">
+      import { createApiReference } from 'https://cdn.jsdelivr.net/npm/@scalar/api-reference/esm.js';
+
+      createApiReference('#app', {
+        url: './api.json',
+        theme: 'purple',
+      });
+    </script>
+  </body>
+</html>

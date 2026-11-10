@@ -1,0 +1,86 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/categories": {
+      "get": {
+        "operationId": "CategoryController_getCategories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Category"]
+      },
+      "post": {
+        "operationId": "CategoryController_createCategory",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["Category"]
+      }
+    },
+    "/categories/{id}": {
+      "get": {
+        "operationId": "CategoryController_getCategory",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["Category"]
+      }
+    }
+  },
+  "info": {
+    "title": "TopCV API",
+    "description": "API cho hệ thống tuyển dụng: công ty, tin tuyển dụng, ứng viên, CV",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "CreateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "parent_id": {
+            "type": "string",
+            "example": "1",
+            "description": "Id danh mục cha"
+          },
+          "name": {
+            "type": "string",
+            "example": "Kế toán",
+            "description": "Tên danh mục"
+          }
+        },
+        "required": ["name"]
+      }
+    }
+  }
+}
