@@ -13,31 +13,37 @@ import {
 export class BaseService<T extends ObjectLiteral> {
   constructor(protected readonly repository: Repository<T>) {}
 
-  async getAll(options?: FindManyOptions<T>, page = 1, limit = 10) {
+  async getAll(options?: FindManyOptions<T>, page?: number, limit?: number) {
+    const pagination =
+      page !== undefined && limit !== undefined ? { page, limit } : undefined;
+
     const [items, total] = await this.repository.findAndCount({
       ...options,
       where: { deleted_at: IsNull(), ...options?.where } as FindOptionsWhere<T>,
-      skip: (page - 1) * limit,
-      take: limit,
+      ...(pagination && {
+        skip: (pagination.page - 1) * pagination.limit,
+        take: limit,
+      }),
     });
     return {
       items,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
+      ...(pagination && {
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / pagination.limit),
+        },
+      }),
     };
   }
 
-  getById(id: string | number): Promise<T | null> {
+  getOne(id: string | number): Promise<T | null> {
     return this.repository.findOneBy({
       id: id,
       deleted_at: IsNull(),
     } as any);
   }
-
   create(createDto: DeepPartial<T>): Promise<T> {
     const entity = this.repository.create(createDto);
     return this.repository.save(entity);
@@ -58,7 +64,7 @@ export class BaseService<T extends ObjectLiteral> {
     if (!result.affected) {
       return null;
     }
-    return this.getById(id);
+    return this.getOne(id);
   }
 
   async softDelete(id: string | number) {

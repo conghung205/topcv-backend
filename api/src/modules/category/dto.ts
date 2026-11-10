@@ -5,6 +5,10 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import {
+  BaseListResponseDto,
+  BasePaginationMetaDto,
+} from '../../common/base/dto';
 
 export class CreateCategoryDto {
   @ApiPropertyOptional({ example: '1', description: 'Id danh mục cha' })
@@ -32,18 +36,6 @@ export class CategoryResponseDto {
 
   @ApiProperty({ example: true })
   active: boolean;
-
-  @ApiProperty({ example: '2026-10-29T02:00:00.000Z' })
-  created_at: Date;
-
-  @ApiPropertyOptional({ example: '1', nullable: true })
-  created_by: string | null;
-
-  @ApiProperty({ example: '2026-10-29T02:00:00.000Z', nullable: true })
-  modified_at: Date | null;
-
-  @ApiPropertyOptional({ example: '1', nullable: true })
-  modified_by: string | null;
 }
 
 export class CategoryApiResponseDto {
@@ -74,26 +66,12 @@ export class CategoryApiUpdateResponseDto {
   data: CategoryResponseDto;
 }
 
-export class CategoryPaginationMetaDto {
-  @ApiProperty({ example: 25 })
-  total: number;
-
-  @ApiProperty({ example: 1 })
-  page: number;
-
-  @ApiProperty({ example: 10 })
-  limit: number;
-
-  @ApiProperty({ example: 3 })
-  totalPages: number;
-}
-
-export class CategoryListResponseDto {
+export class CategoryListResponseDto extends BaseListResponseDto<CategoryResponseDto> {
   @ApiProperty({ type: [CategoryResponseDto] })
   items: CategoryResponseDto[];
 
-  @ApiProperty({ type: CategoryPaginationMetaDto })
-  meta: CategoryPaginationMetaDto;
+  @ApiProperty({ type: BasePaginationMetaDto })
+  meta: BasePaginationMetaDto;
 }
 
 export class CategoryListApiResponseDto {

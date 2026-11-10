@@ -24,10 +24,6 @@ export class CategoryService extends BaseService<CategoryEntity> {
       name: category.name,
       parent_id: category.parent_id,
       active: category.active,
-      created_at: category.created_at,
-      created_by: category.created_by,
-      modified_at: category.modified_at,
-      modified_by: category.modified_by,
     };
   }
 
@@ -64,7 +60,7 @@ export class CategoryService extends BaseService<CategoryEntity> {
   }
 
   async getCategory(id: string | number): Promise<CategoryResponseDto> {
-    const category = await this.getById(id);
+    const category = await this.getOne(id);
     if (!category) {
       throw new NotFoundException('Category not found');
     }

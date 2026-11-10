@@ -34,18 +34,16 @@ export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @ApiOkResponse({
-    description: 'Get categories successfully',
     type: CategoryListApiResponseDto,
   })
   @ResponseMessage('Get categories successfully')
   @Get()
-  @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
-  @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({
     name: 'search',
     required: false,
     type: String,
-    example: 'Lập trình web',
   })
   async getCategories(
     @Query() query: { page?: number; limit?: number; search?: string },
@@ -58,7 +56,6 @@ export class CategoryController {
   }
 
   @ApiOkResponse({
-    description: 'Get category successfully',
     type: CategoryApiResponseDto,
   })
   @ResponseMessage('Get category successfully')
@@ -69,7 +66,6 @@ export class CategoryController {
   }
 
   @ApiCreatedResponse({
-    description: 'Created category successfully',
     type: CategoryResponseDto,
   })
   @ResponseMessage('Created category successfully')
@@ -79,7 +75,6 @@ export class CategoryController {
   }
 
   @ApiOkResponse({
-    description: 'Updated category successfully',
     type: CategoryApiUpdateResponseDto,
   })
   @ResponseMessage('Updated category successfully')

@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { CategoryModule } from './modules/category/module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ResponseInterceptor } from './common/interceptors/response';
+import { ProvinceModule } from './modules/province/module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ResponseInterceptor } from './common/interceptors/response';
       synchronize: false,
     }),
     CategoryModule,
+    ProvinceModule,
   ],
   controllers: [],
   providers: [AppService, ResponseInterceptor],
