@@ -3,7 +3,7 @@ import { BaseService } from '../../common/base/service';
 import { ProvinceEntity } from './province.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, IsNull, Repository } from 'typeorm';
-import { ProvinceListResponseDto, ProvinceResponseDto } from './dto';
+import { ProvinceListResponseDto, ProvinceResponseDto } from './province.dto';
 import { WardEntity } from './ward.entity';
 
 @Injectable()

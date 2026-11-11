@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { CategoryModule } from './modules/category/module';
+import { CategoryModule } from './modules/category/category.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ResponseInterceptor } from './common/interceptors/response';
-import { ProvinceModule } from './modules/province/module';
+import { ProvinceModule } from './modules/province/province.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ProvinceModule } from './modules/province/module';
     }),
     CategoryModule,
     ProvinceModule,
+    AuthModule,
   ],
   controllers: [],
   providers: [AppService, ResponseInterceptor],

@@ -10,7 +10,7 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { CategoryService } from './service';
+import { CategoryService } from './category.service';
 import {
   CategoryApiResponseDto,
   CategoryApiUpdateResponseDto,
@@ -18,7 +18,7 @@ import {
   CategoryResponseDto,
   CreateCategoryDto,
   UpdateCategoryDto,
-} from './dto';
+} from './category.dto';
 import {
   ApiCreatedResponse,
   ApiOkResponse,
@@ -26,7 +26,7 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { ResponseMessage } from '../../common/decorators/response-message';
+import { ResponseMessage } from '../../common/decorators/responseMessage';
 
 @ApiTags('Categories')
 @Controller('categories')

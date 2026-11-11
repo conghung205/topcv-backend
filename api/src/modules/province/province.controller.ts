@@ -1,8 +1,8 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { ProvinceService } from './service';
-import { ResponseMessage } from '../../common/decorators/response-message';
-import { ProvinceApiResponseDto, WardApiResponseDto } from './dto';
+import { ProvinceService } from './province.service';
+import { ResponseMessage } from '../../common/decorators/responseMessage';
+import { ProvinceApiResponseDto, WardApiResponseDto } from './province.dto';
 
 @ApiTags('province')
 @Controller('province')

@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CategoryEntity } from './entity';
+import { CategoryEntity } from './category.entity';
 import { DeepPartial, ILike, Repository } from 'typeorm';
 import { BaseService } from '../../common/base/service';
 import {
   CategoryResponseDto,
   CreateCategoryDto,
   UpdateCategoryDto,
-} from './dto';
+} from './category.dto';
 
 @Injectable()
 export class CategoryService extends BaseService<CategoryEntity> {

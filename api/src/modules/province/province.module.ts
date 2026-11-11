@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProvinceEntity } from './province.entity';
-import { ProvinceService } from './service';
-import { ProvinceController } from './controller';
+import { ProvinceService } from './province.service';
+import { ProvinceController } from './province.controller';
 import { WardEntity } from './ward.entity';
 
 @Module({

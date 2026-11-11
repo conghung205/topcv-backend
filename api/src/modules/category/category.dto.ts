@@ -87,3 +87,5 @@ export class CategoryListApiResponseDto {
   @ApiProperty({ type: CategoryListResponseDto })
   data: CategoryListResponseDto;
 }
+
+
