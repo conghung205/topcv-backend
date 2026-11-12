@@ -1,7 +1,9 @@
 import { CandidateEntity } from '../candidate/candidate.entity';
-import { DataSource, IsNull, Repository } from 'typeorm';
+import { DataSource, IsNull, MoreThan, Repository } from 'typeorm';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { LoginDto, RegisterCandidateDto, RegisterCompanyDto } from './auth.dto';
+import { LoginDto } from './dto/login.dto';
+import { RegisterCandidateDto } from './dto/registerCandidate.dto';
+import { RegisterCompanyDto } from './dto/registerCompany.dto';
 import { UserEntity } from './user.entity';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -10,6 +12,7 @@ import { RefreshTokenEntity } from './refreshToken.entity';
 import { CompanyEntity } from '../company/company.entity';
 import { CompanyAddressEntity } from '../company/companyAddress.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { RefreshTokenDto } from './dto/refreshToken.dto';
 
 @Injectable()
 export class AuthService {
@@ -18,6 +21,8 @@ export class AuthService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
+    @InjectRepository(RefreshTokenEntity)
+    private readonly refreshTokenRepository: Repository<RefreshTokenEntity>,
     private jwtService: JwtService,
     private dataSource: DataSource,
   ) {}
@@ -183,5 +188,77 @@ export class AuthService {
       ...result,
       refresh_token: newRefreshToken,
     };
+  }
+
+  // logout
+  async logout(dto: RefreshTokenDto) {
+    const tokenHash = hashRefreshToken(dto.refresh_token);
+    const now = new Date();
+    await this.refreshTokenRepository.update(
+      {
+        token: tokenHash,
+        revoked_at: IsNull(),
+      },
+      { revoked_at: now },
+    );
+  }
+
+  // Refresh Token
+  async refreshToken(dto: RefreshTokenDto) {
+    const tokenHash = hashRefreshToken(dto.refresh_token);
+
+    const storedToken = await this.refreshTokenRepository.findOneBy({
+      token: tokenHash,
+      revoked_at: IsNull(),
+    });
+    if (!storedToken) {
+      throw new UnauthorizedException();
+    }
+
+    const user = await this.userRepository.findOneBy({
+      id: storedToken.user_id,
+      active: true,
+      deleted_at: IsNull(),
+    });
+
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    const newRefreshToken = generateRefreshToken();
+    const now = new Date();
+
+    const result = await this.dataSource.transaction(async (manager) => {
+      const updateResult = await manager.update(
+        RefreshTokenEntity,
+        {
+          id: storedToken.id,
+          revoked_at: IsNull(),
+          expires_at: MoreThan(now),
+        },
+        { revoked_at: now },
+      );
+
+      if (updateResult.affected !== 1) {
+        throw new UnauthorizedException();
+      }
+
+      // save new refresh token
+      await manager.save(RefreshTokenEntity, {
+        user_id: storedToken.user_id,
+        token: hashRefreshToken(newRefreshToken),
+        expires_at: this.getRefreshTokenExpiresAt(),
+      });
+
+      // create new acccessToken
+      const accessToken = await this.jwtService.signAsync({
+        sub: storedToken.user_id,
+        role: user.role,
+      });
+
+      return { access_token: accessToken, refresh_token: newRefreshToken };
+    });
+
+    return result;
   }
 }

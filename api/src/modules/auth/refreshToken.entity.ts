@@ -19,9 +19,9 @@ export class RefreshTokenEntity {
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @CreateDateColumn({ type: 'timestamptz' })
+  @Column({ type: 'timestamptz' })
   expires_at: Date;
 
-  @CreateDateColumn({ type: 'timestamptz', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   revoked_at: Date;
 }
