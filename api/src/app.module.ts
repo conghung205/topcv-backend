@@ -6,6 +6,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ResponseInterceptor } from './common/interceptors/response';
 import { ProvinceModule } from './modules/province/province.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { CandidateModule } from './modules/candidate/candidate.module';
+import { CompanyModule } from './modules/company/company.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { AuthModule } from './modules/auth/auth.module';
     CategoryModule,
     ProvinceModule,
     AuthModule,
+    CandidateModule,
+    CompanyModule,
   ],
   controllers: [],
   providers: [AppService, ResponseInterceptor],
