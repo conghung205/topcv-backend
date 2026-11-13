@@ -1,4 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsEmail,
+  IsOptional,
+  IsPhoneNumber,
+  IsString,
+  ValidateIf,
+} from 'class-validator';
 
 export class CandidateGetMeResponseDto {
   @ApiProperty({ example: '1' })
@@ -19,4 +26,36 @@ export class CandidateGetMeResponseDto {
   address_detail: string | null;
   @ApiProperty()
   created_at: Date;
+}
+
+export class UpdateCandidateDto {
+  @ApiPropertyOptional()
+  @ValidateIf((_, value) => value !== undefined)
+  @IsString()
+  name?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsPhoneNumber('VN')
+  phone?: string | null;
+
+  @ApiPropertyOptional()
+  @ValidateIf((_, value) => value !== undefined)
+  @IsEmail()
+  email?: string | null;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  gender?: string | null;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  ward_id?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  address_detail?: string | null;
 }

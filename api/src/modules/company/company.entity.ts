@@ -1,5 +1,7 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { BaseAppEntity } from '../../common/base/entity';
+import { UserEntity } from '../auth/user.entity';
+import { CompanyAddressEntity } from './companyAddress.entity';
 
 @Entity('company')
 export class CompanyEntity extends BaseAppEntity {
@@ -29,4 +31,11 @@ export class CompanyEntity extends BaseAppEntity {
 
   @Column({ type: 'bigint' })
   user_id: string;
+
+  @OneToMany(() => CompanyAddressEntity, (address) => address.company)
+  addresses: CompanyAddressEntity[];
+
+  @OneToOne(() => UserEntity)
+  @JoinColumn({ name: 'user_id' })
+  user: UserEntity;
 }

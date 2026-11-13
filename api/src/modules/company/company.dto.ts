@@ -1,4 +1,29 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsEmail,
+  IsNumber,
+  IsOptional,
+  IsPhoneNumber,
+  IsString,
+  ValidateIf,
+  ValidateNested,
+} from 'class-validator';
+
+export class CompanyAddressResponseDto {
+  @ApiProperty({ example: '1' })
+  id: string;
+
+  @ApiProperty({ type: String, nullable: true, example: '123' })
+  ward_id: string | null;
+
+  @ApiProperty({ type: String, nullable: true, example: '01' })
+  province_id: string | null;
+
+  @ApiProperty({ type: String, nullable: true, example: '12 Nguyễn Trãi' })
+  address_detail: string | null;
+}
 
 export class CompanyGetMeResponseDto {
   @ApiProperty({ example: '1' })
@@ -21,10 +46,64 @@ export class CompanyGetMeResponseDto {
   rate: number;
   @ApiProperty()
   created_at: Date;
-  @ApiPropertyOptional({ example: '1' })
+
+  @ApiProperty({ type: () => [CompanyAddressResponseDto] })
+  addresses: CompanyAddressResponseDto[];
+}
+
+export class UpdateCompanyAddressDto {
+  @ValidateIf((_, value) => value !== undefined)
+  @IsString()
+  id?: string;
+
+  @ValidateIf((_, value) => value !== undefined)
+  @IsString()
   ward_id?: string;
-  @ApiPropertyOptional({ example: '1' })
-  province_id?: string;
-  @ApiPropertyOptional({ type: String, nullable: true })
-  address_detail?: string | null;
+
+  @IsOptional()
+  @IsString()
+  address_detail?: string;
+}
+export class UpdateCompanyDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  tax?: string;
+
+  @ApiPropertyOptional()
+  @ValidateIf((_, value) => value !== undefined)
+  @IsString()
+  name?: string;
+
+  @ApiPropertyOptional()
+  @ValidateIf((_, value) => value !== undefined)
+  @IsString()
+  name_eng?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiPropertyOptional()
+  @ValidateIf((_, value) => value !== undefined)
+  @IsEmail()
+  email?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsPhoneNumber('VN')
+  phone?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  website?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateCompanyAddressDto)
+  addresses?: UpdateCompanyAddressDto[];
 }
