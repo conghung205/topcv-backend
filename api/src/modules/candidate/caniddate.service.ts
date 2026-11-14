@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CandidateEntity } from './candidate.entity';
-import { DataSource, DeepPartial, Repository } from 'typeorm';
+import { DataSource, DeepPartial, QueryFailedError, Repository } from 'typeorm';
 import { Role } from '../auth/type';
 import { UserEntity } from '../auth/user.entity';
 import { WardEntity } from '../province/ward.entity';
@@ -15,7 +19,7 @@ export class CandidateService {
     private dataSource: DataSource,
   ) {}
 
-  async getMe(userId: string, role: Role) {
+  async getMe(userId: string) {
     const candidate = await this.candidateRepository
       .createQueryBuilder('candidate')
       .innerJoin('candidate.user', 'user')
@@ -32,7 +36,6 @@ export class CandidateService {
         'ward.province_id',
       ])
       .where('user.id = :userId', { userId })
-      .andWhere('user.role = :role', { role })
       .getOne();
 
     if (!candidate) {
@@ -53,16 +56,16 @@ export class CandidateService {
   }
 
   // update
-  async update(
-    userId: string,
-    role: Role,
-    dto: DeepPartial<UpdateCandidateDto>,
-  ) {
+  async update(userId: string, dto: UpdateCandidateDto) {
     const candidateChanges = Object.fromEntries(
       Object.entries(dto).filter(([, value]) => value !== undefined),
     );
 
-    if (Object.keys(candidateChanges).length > 0) {
+    if (Object.keys(candidateChanges).length === 0) {
+      return this.getMe(userId);
+    }
+
+    try {
       await this.dataSource.transaction(async (manager) => {
         const result = await manager.update(
           CandidateEntity,
@@ -82,8 +85,18 @@ export class CandidateService {
           );
         }
       });
+    } catch (error) {
+      if (
+        error instanceof QueryFailedError &&
+        error.driverError.code === '23505' &&
+        error.driverError.constraint === 'users_email_key'
+      ) {
+        throw new ConflictException();
+      }
+
+      throw error;
     }
 
-    return this.getMe(userId, role);
+    return this.getMe(userId);
   }
 }

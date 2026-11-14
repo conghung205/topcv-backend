@@ -18,10 +18,10 @@ export class CandidateGetMeResponseDto {
   email: string | null;
   @ApiProperty({ type: String, nullable: true, example: 'male' })
   gender: string | null;
-  @ApiPropertyOptional({ example: '1' })
-  province_id?: string;
-  @ApiPropertyOptional({ example: '1' })
-  ward_id?: string;
+  @ApiPropertyOptional({ example: '1', nullable: true })
+  province_id?: string | null;
+  @ApiPropertyOptional({ example: '1', nullable: true })
+  ward_id?: string | null;
   @ApiProperty({ type: String, nullable: true })
   address_detail: string | null;
   @ApiProperty()

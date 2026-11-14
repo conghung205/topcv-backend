@@ -8,6 +8,7 @@ import { ProvinceModule } from './modules/province/province.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CandidateModule } from './modules/candidate/candidate.module';
 import { CompanyModule } from './modules/company/company.module';
+import { JobModule } from './modules/job/job.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { CompanyModule } from './modules/company/company.module';
     AuthModule,
     CandidateModule,
     CompanyModule,
+    JobModule,
   ],
   controllers: [],
   providers: [AppService, ResponseInterceptor],

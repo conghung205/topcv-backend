@@ -64,6 +64,7 @@ export class UpdateCompanyAddressDto {
   @IsString()
   address_detail?: string;
 }
+
 export class UpdateCompanyDto {
   @ApiPropertyOptional()
   @IsOptional()
@@ -101,7 +102,7 @@ export class UpdateCompanyDto {
   website?: string;
 
   @ApiPropertyOptional()
-  @IsOptional()
+  @ValidateIf((_, value) => value !== undefined)
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => UpdateCompanyAddressDto)

@@ -8,8 +8,8 @@ import { CandidateGetMeResponseDto, UpdateCandidateDto } from './candidate.dto';
 import { RoleGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/guards/roles.decorator';
 
-@ApiTags('candidate')
-@Controller('candidate')
+@ApiTags('candidates')
+@Controller('candidates')
 export class CandidateController {
   constructor(private readonly candidateService: CandidateService) {}
 
@@ -22,10 +22,13 @@ export class CandidateController {
   @Get('me')
   async getMe(@Req() req: AuthenticatedRequest) {
     const userId = req.user.sub;
-    const role = req.user.role;
-    return this.candidateService.getMe(userId, role);
+    return this.candidateService.getMe(userId);
   }
 
+  @ApiSuccessResponse(
+    CandidateGetMeResponseDto,
+    'Updated candidate successfully',
+  )
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Roles('CANDIDATE')
   @Patch('me')
@@ -35,6 +38,6 @@ export class CandidateController {
   ) {
     const userId = req.user.sub;
     const role = req.user.role;
-    return this.candidateService.update(userId, role, dto);
+    return this.candidateService.update(userId, dto);
   }
 }

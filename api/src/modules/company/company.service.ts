@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Role } from '../auth/type';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
 import { UserEntity } from '../auth/user.entity';
 import { CompanyEntity } from './company.entity';
 import { CompanyAddressEntity } from './companyAddress.entity';
@@ -22,11 +22,11 @@ export class CompanyService {
     private readonly companyAddressRepository: Repository<CompanyAddressEntity>,
     private readonly dataSource: DataSource,
   ) {}
-  async getMe(userId: string, role: Role) {
+  async getMe(userId: string) {
     const company = await this.companyRepository
       .createQueryBuilder('company')
       .innerJoin('company.user', 'user')
-      .leftJoin('company.addresses', 'address')
+      .leftJoin('company.addresses', 'address', 'address.deleted_at IS NULL')
       .leftJoin('address.ward', 'ward')
       .select([
         'company.id',
@@ -45,7 +45,6 @@ export class CompanyService {
         'ward.province_id',
       ])
       .where('user.id = :userId', { userId })
-      .andWhere('user.role = :role', { role })
       .getOne();
 
     if (!company) {
@@ -76,7 +75,7 @@ export class CompanyService {
   }
 
   // update
-  async update(userId: string, role: Role, dto: UpdateCompanyDto) {
+  async update(userId: string, dto: UpdateCompanyDto) {
     const companyAddressMap: Record<string, CompanyAddressEntity> = {};
     const { addresses, email, ...companyFields } = dto;
 
@@ -88,6 +87,7 @@ export class CompanyService {
     if (!company) throw new NotFoundException();
     const companyAddress = await this.companyAddressRepository.findBy({
       company_id: company.id,
+      deleted_at: IsNull(),
     });
 
     // insert companyAddress hashmap
@@ -99,7 +99,7 @@ export class CompanyService {
 
     // if has data
     const hasCompanyChanges = Object.keys(candidateChanges).length > 0;
-    const hasAddressChanges = (addresses?.length ?? 0) > 0;
+    const hasAddressChanges = addresses !== undefined;
     const hasEmailChanges = email !== undefined;
 
     if (hasCompanyChanges || hasAddressChanges || hasEmailChanges) {
@@ -154,62 +154,74 @@ export class CompanyService {
           }
         }
 
-        // if has Addresses
-        for (const { id, ward_id, address_detail } of addresses ?? []) {
-          // if Addresses payload not exits id is insert
-          if (id === undefined) {
-            if (!ward_id || !address_detail?.trim()) {
-              throw new BadRequestException();
-            }
-
-            const ward = await manager.findOneBy(WardEntity, {
-              id: ward_id,
-            });
-
-            if (!ward) throw new BadRequestException();
-
-            await manager.insert(CompanyAddressEntity, {
+        // if address is empty
+        if (addresses?.length === 0) {
+          await manager.update(
+            CompanyAddressEntity,
+            {
               company_id: company.id,
-              ward_id,
-              address_detail,
-            });
-            continue;
-          }
+              deleted_at: IsNull(),
+            },
+            { deleted_at: new Date() },
+          );
+        } else {
+          // if has Addresses
+          for (const { id, ward_id, address_detail } of addresses ?? []) {
+            // if Addresses payload not exits id is insert
+            if (id === undefined) {
+              if (!ward_id || !address_detail?.trim()) {
+                throw new BadRequestException();
+              }
 
-          // check id hasOwn company
-          if (!Object.hasOwn(companyAddressMap, id)) {
-            throw new NotFoundException();
-          }
-
-          const changes = {
-            ...(ward_id !== undefined ? { ward_id } : {}),
-            ...(address_detail !== undefined ? { address_detail } : {}),
-          };
-
-          if (Object.keys(changes).length > 0) {
-            if (ward_id !== undefined) {
               const ward = await manager.findOneBy(WardEntity, {
                 id: ward_id,
               });
 
-              if (!ward) {
-                throw new BadRequestException();
-              }
-            }
-            const result = await manager.update(
-              CompanyAddressEntity,
-              { id, company_id: company.id },
-              changes,
-            );
+              if (!ward) throw new BadRequestException();
 
-            if (result.affected === 0) {
+              await manager.insert(CompanyAddressEntity, {
+                company_id: company.id,
+                ward_id,
+                address_detail,
+              });
+              continue;
+            }
+
+            // check id hasOwn company
+            if (!Object.hasOwn(companyAddressMap, id)) {
               throw new NotFoundException();
+            }
+
+            const changes = {
+              ...(ward_id !== undefined ? { ward_id } : {}),
+              ...(address_detail !== undefined ? { address_detail } : {}),
+            };
+
+            if (Object.keys(changes).length > 0) {
+              if (ward_id !== undefined) {
+                const ward = await manager.findOneBy(WardEntity, {
+                  id: ward_id,
+                });
+
+                if (!ward) {
+                  throw new BadRequestException();
+                }
+              }
+              const result = await manager.update(
+                CompanyAddressEntity,
+                { id, company_id: company.id, deleted_at: IsNull() },
+                changes,
+              );
+
+              if (result.affected === 0) {
+                throw new NotFoundException();
+              }
             }
           }
         }
       });
     }
 
-    return this.getMe(userId, role);
+    return this.getMe(userId);
   }
 }
