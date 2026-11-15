@@ -1,5 +1,8 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { BaseAppEntity } from '../../common/base/entity';
+import { JobAddressEntity } from './jobAddress.entity';
+import { CompanyEntity } from '../company/company.entity';
+import { CategoryEntity } from '../category/category.entity';
 
 @Entity('job')
 export class JobEntity extends BaseAppEntity {
@@ -31,4 +34,15 @@ export class JobEntity extends BaseAppEntity {
   work_type: string | null;
   @Column({ type: 'text', nullable: true })
   working_time: string | null;
+
+  @OneToMany(() => JobAddressEntity, (address) => address.job)
+  jobAddresses: JobAddressEntity[];
+
+  @ManyToOne(() => CompanyEntity, { nullable: false })
+  @JoinColumn({ name: 'company_id' })
+  company: CompanyEntity;
+
+  @ManyToOne(() => CategoryEntity, { nullable: false })
+  @JoinColumn({ name: 'category_id' })
+  category: CategoryEntity;
 }

@@ -11,10 +11,16 @@ import { CompanyAddressEntity } from '../company/companyAddress.entity';
 import { CategoryEntity } from '../category/category.entity';
 import { JobEntity } from './job.entity';
 import { JobAddressEntity } from './jobAddress.entity';
+import {
+  PaginationQueryDto,
+  SearchPaginationQueryDto,
+} from '../../common/base/dto';
 
 @Injectable()
 export class JobService {
   constructor(
+    @InjectRepository(JobEntity)
+    private readonly jobRepository: Repository<JobEntity>,
     @InjectRepository(CompanyEntity)
     private readonly companyRepository: Repository<CompanyEntity>,
     @InjectRepository(CompanyAddressEntity)
@@ -24,6 +30,138 @@ export class JobService {
 
     private readonly dataSource: DataSource,
   ) {}
+
+  // get many
+  async getJobs(query: SearchPaginationQueryDto) {
+    const { page, limit } = query;
+    const search = query.search?.trim();
+
+    const baseQuery = this.jobRepository
+      .createQueryBuilder('job')
+      .innerJoin('job.company', 'company', 'company.deleted_at IS NULL')
+      .innerJoin('job.category', 'category', 'category.deleted_at IS NULL')
+      .where('job.deleted_at IS NULL');
+
+    if (search) {
+      baseQuery.andWhere('job.title ILIKE :search', {
+        search: `%${search}%`,
+      });
+    }
+
+    const countResult = await baseQuery
+      .clone()
+      .select('COUNT(*)', 'total')
+      .getRawOne();
+    const total = Number(countResult?.total ?? 0);
+
+    const jobs = await baseQuery
+      .clone()
+      .leftJoin('job.jobAddresses', 'address', 'address.deleted_at IS NULL')
+      .leftJoin(
+        'address.companyAddress',
+        'companyAddress',
+        'companyAddress.deleted_at IS NULL',
+      )
+      .leftJoin('companyAddress.ward', 'ward')
+      .leftJoin('province', 'province', 'province.id = ward.province_id')
+      .select([
+        'job.id AS id',
+        'job.title AS title',
+        'job.requirement AS requirement',
+        'job.due_date AS due_date',
+        'job.qualification AS qualification',
+        'job.work_type AS work_type',
+        'job.working_time AS working_time',
+        'company.name AS company_name',
+        'category.name AS category_name',
+        `json_agg(
+          json_build_object(
+            'company_address_id', CAST("companyAddress"."id" AS text),
+            'address_detail', "companyAddress"."address_detail",
+            'ward_name', ward.name,
+            'province_name', province.name
+          )
+        ) FILTER (WHERE "companyAddress"."id" IS NOT NULL) AS "jobAddresses"`,
+      ])
+      .groupBy('job.id')
+      .addGroupBy('company.id')
+      .addGroupBy('category.id')
+      .orderBy('job.id', 'DESC')
+      .limit(limit)
+      .offset((page - 1) * limit)
+      .getRawMany();
+
+    return {
+      items: jobs.map((job) => ({
+        ...job,
+        jobAddresses: job.jobAddresses ?? [],
+      })),
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  // get one
+  async getJob(jobId: string) {
+    const job = await this.jobRepository
+      .createQueryBuilder('job')
+      .innerJoin('job.company', 'company', 'company.deleted_at IS NULL')
+      .innerJoin('job.category', 'category', 'category.deleted_at IS NULL')
+      .leftJoin('job.jobAddresses', 'address', 'address.deleted_at IS NULL')
+      .leftJoin(
+        'address.companyAddress',
+        'companyAddress',
+        'companyAddress.deleted_at IS NULL',
+      )
+      .leftJoin('companyAddress.ward', 'ward')
+      .leftJoin('province', 'province', 'province.id = ward.province_id')
+      .select([
+        'job.id AS id',
+        'job.title AS title',
+        'job.description AS description',
+        'job.requirement AS requirement',
+        'job.benefit AS benefit',
+        'job.experience AS experience',
+        'job.due_date AS due_date',
+        'job.min_salary AS min_salary',
+        'job.max_salary AS max_salary',
+        'job.qualification AS qualification',
+        'job.work_type AS work_type',
+        'job.working_time AS working_time',
+        'job.created_at AS created_at',
+        'company.name AS company_name',
+        'category.name AS category_name',
+        `json_agg(
+          json_build_object(
+            'company_address_id', CAST("companyAddress"."id" AS text),
+            'address_detail', "companyAddress"."address_detail",
+            'ward_name', ward.name,
+            'province_name', province.name
+          )
+        ) FILTER (WHERE "companyAddress"."id" IS NOT NULL) AS "jobAddresses"`,
+      ])
+      .where('job.id = :jobId', { jobId })
+      .andWhere('job.deleted_at IS NULL')
+      .groupBy('job.id')
+      .addGroupBy('company.id')
+      .addGroupBy('category.id')
+      .getRawOne();
+
+    if (!job) {
+      throw new NotFoundException('Job not found');
+    }
+
+    return {
+      items: {
+        ...job,
+        jobAddresses: job.jobAddresses ?? [],
+      },
+    };
+  }
 
   // create job
   async createJob(userId: string, dto: CreateJobDto) {
@@ -74,7 +212,7 @@ export class JobService {
       return savedJob;
     });
 
-    return job;
+    return this.getJob(job.id);
   }
 
   // update Job
@@ -197,5 +335,33 @@ export class JobService {
         }
       }
     });
+
+    return this.getJob(jobId);
+  }
+
+  // delete job
+  async softDelete(jobId: string, userId: string) {
+    const company = await this.companyRepository.findOneBy({
+      user_id: userId,
+      deleted_at: IsNull(),
+    });
+
+    if (!company) {
+      throw new NotFoundException('Company not found');
+    }
+
+    const result = await this.jobRepository.update(
+      {
+        id: jobId,
+        deleted_at: IsNull(),
+        company_id: company.id,
+      },
+      {
+        deleted_at: new Date(),
+        deleted_by: userId,
+      },
+    );
+
+    if (result.affected === 0) throw new NotFoundException();
   }
 }

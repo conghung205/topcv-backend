@@ -12,6 +12,7 @@ async function bootstrap() {
     new ValidationPipe({
       // when the client sends incorrect fields
       whitelist: true,
+      transform: true,
       forbidNonWhitelisted: true,
       exceptionFactory: () => {
         return new BadRequestException('invalid data');
