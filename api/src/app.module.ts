@@ -9,6 +9,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { CandidateModule } from './modules/candidate/candidate.module';
 import { CompanyModule } from './modules/company/company.module';
 import { JobModule } from './modules/job/job.module';
+import { CvModule } from './modules/cv/cv.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { JobModule } from './modules/job/job.module';
     CandidateModule,
     CompanyModule,
     JobModule,
+    CvModule,
   ],
   controllers: [],
   providers: [AppService, ResponseInterceptor],
