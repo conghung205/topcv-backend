@@ -7,6 +7,8 @@ import { HttpExceptionFilter } from './common/filters/httpException';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.setGlobalPrefix('api/v1');
+
   // validation with Pipes
   app.useGlobalPipes(
     new ValidationPipe({
@@ -24,7 +26,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('TopCV API')
     .setDescription(
-      'API cho hệ thống tuyển dụng: công ty, tin tuyển dụng, ứng viên, CV',
+      'API cho hệ thống tuyển dụng: công ty, tin tuyển dụng, ứng viên, CV. Lưu ý: Đây là dự án học tập',
     )
     .setVersion('1.0')
     .build();

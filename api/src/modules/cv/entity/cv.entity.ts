@@ -1,5 +1,5 @@
 import { Column, Entity } from 'typeorm';
-import { BaseAppEntity } from '../../common/base/entity';
+import { BaseAppEntity } from '../../../common/base/entity';
 
 type CvType = 'UPLOAD' | 'BUILDER';
 

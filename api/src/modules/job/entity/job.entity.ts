@@ -1,8 +1,8 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
-import { BaseAppEntity } from '../../common/base/entity';
+import { BaseAppEntity } from '../../../common/base/entity';
+import { CompanyEntity } from '../../company/company.entity';
+import { CategoryEntity } from '../../category/category.entity';
 import { JobAddressEntity } from './jobAddress.entity';
-import { CompanyEntity } from '../company/company.entity';
-import { CategoryEntity } from '../category/category.entity';
 
 @Entity('job')
 export class JobEntity extends BaseAppEntity {

@@ -9,12 +9,12 @@ import { CompanyEntity } from '../company/company.entity';
 import { DataSource, In, IsNull, Repository } from 'typeorm';
 import { CompanyAddressEntity } from '../company/companyAddress.entity';
 import { CategoryEntity } from '../category/category.entity';
-import { JobEntity } from './job.entity';
-import { JobAddressEntity } from './jobAddress.entity';
+import { JobEntity } from './entity/job.entity';
 import {
   PaginationQueryDto,
   SearchPaginationQueryDto,
 } from '../../common/base/dto';
+import { JobAddressEntity } from './entity/jobAddress.entity';
 
 @Injectable()
 export class JobService {

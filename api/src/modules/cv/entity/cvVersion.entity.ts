@@ -10,40 +10,37 @@ type CvContent = {
 
   personalInfo: {
     fullName: string;
-    jobTitle?: string;
-    email?: string;
-    phone?: string;
-    location?: string;
-    links?: { label: string; url: string }[];
+    jobTitle?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    location?: string | null;
+    links?: { label: string; url: string }[] | null;
   };
 
-  summary?: string;
+  summary?: string | null;
 
   experiences: {
-    id: string;
     company: string;
     position: string;
-    startDate: string;
-    endDate: string | null;
+    startDate?: string | null;
+    endDate?: string | null;
     highlights: string[];
   }[];
 
   education: {
-    id: string;
     school: string;
-    degree?: string;
-    major?: string;
-    startDate?: string;
-    endDate?: string;
+    degree?: string | null;
+    major?: string | null;
+    startDate?: string | null;
+    endDate?: string | null;
   }[];
 
   skills: string[];
 
   projects: {
-    id: string;
     name: string;
-    description?: string;
-    url?: string;
+    description?: string | null;
+    url?: string | null;
   }[];
 };
 

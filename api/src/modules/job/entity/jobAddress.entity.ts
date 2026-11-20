@@ -1,8 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { BaseAppEntity } from '../../common/base/entity';
+import { BaseAppEntity } from '../../../common/base/entity';
 import { JobEntity } from './job.entity';
-import { CompanyAddressEntity } from '../company/companyAddress.entity';
-
+import { CompanyAddressEntity } from '../../company/companyAddress.entity';
 @Entity('job_address')
 export class JobAddressEntity extends BaseAppEntity {
   @Column({ type: 'bigint' })

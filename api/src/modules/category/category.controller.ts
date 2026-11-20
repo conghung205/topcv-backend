@@ -6,8 +6,8 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
-  Put,
   Query,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
@@ -79,7 +79,7 @@ export class CategoryController {
   })
   @ResponseMessage('Updated category successfully')
   @ApiParam({ name: 'id', type: String })
-  @Put(':id')
+  @Patch(':id')
   async updateCategory(
     @Param('id') id: string | number,
     @Body() updateCategoryDto: UpdateCategoryDto,

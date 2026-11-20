@@ -46,4 +46,14 @@ export class CloudinaryService {
       stream.end(buffer);
     });
   }
+
+  // generate cv
+  generateCvUrl(publicId: string): string {
+    return cloudinary.utils.private_download_url(publicId, 'pdf', {
+      resource_type: 'image',
+      type: 'authenticated',
+      expires_at: Math.floor(Date.now() / 1000) + 5 * 60,
+      attachment: false,
+    });
+  }
 }

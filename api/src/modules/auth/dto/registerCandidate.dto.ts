@@ -14,9 +14,9 @@ export class RegisterCandidateDto extends RegisterUserDto {
   name: string;
 
   @ApiPropertyOptional({ type: String, nullable: true, example: 'male' })
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  gender: string | null;
+  gender?: string | null;
 
   @ApiPropertyOptional({ type: String, nullable: true, example: '0912345678' })
   @IsOptional()

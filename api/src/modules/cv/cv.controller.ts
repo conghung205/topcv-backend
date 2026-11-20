@@ -1,7 +1,15 @@
 import {
   BadRequestException,
+  Body,
   Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
   Post,
+  Query,
   Req,
   UploadedFile,
   UseGuards,
@@ -14,13 +22,77 @@ import { JwtAuthGuard } from '../auth/guards/jwtAuth.guard';
 import { RoleGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/guards/roles.decorator';
 import type { AuthenticatedRequest } from '../auth/type';
-import { UploadCvResponseDto } from './cv.dto';
+import {
+  CreateCvResponseDto,
+  CvDetailResponseDto,
+  CvListResponseDto,
+  UpdateCvResponseDto,
+  UploadCvResponseDto,
+} from './dto/cv.dto';
+import { SearchPaginationQueryDto } from '../../common/base/dto';
+import { ApiQuery } from '@nestjs/swagger';
+import { CreateCvDto, UpdateCvDto } from './dto/cvContent.dto';
 
 @Controller('cvs')
 export class CvController {
   constructor(private readonly cvService: CvService) {}
 
-  @ApiSuccessResponse(UploadCvResponseDto, 'Upload CV successfully')
+  // get list
+  @ApiSuccessResponse(CvListResponseDto, 'Get List CV successfully')
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+  })
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles('CANDIDATE')
+  @Get()
+  getCvs(
+    @Req() req: AuthenticatedRequest,
+    @Query() query: SearchPaginationQueryDto,
+  ) {
+    const userId = req.user.sub;
+
+    return this.cvService.getCvs(userId, query);
+  }
+
+  // get one
+  @ApiSuccessResponse(CvDetailResponseDto, 'Get CV successfully')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles('CANDIDATE')
+  @Get('versions/:cvVersionId')
+  getCv(
+    @Req() req: AuthenticatedRequest,
+    @Param('cvVersionId') cvVersionId: string,
+  ) {
+    const userId = req.user.sub;
+
+    return this.cvService.getOneCv(userId, cvVersionId);
+  }
+
+  // create new cv
+  @ApiSuccessResponse(
+    CreateCvResponseDto,
+    'Created CV successfully',
+    HttpStatus.CREATED,
+  )
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles('CANDIDATE')
+  @Post()
+  createNewCv(@Req() req: AuthenticatedRequest, @Body() dto: CreateCvDto) {
+    const userId = req.user.sub;
+
+    return this.cvService.createCv(userId, dto);
+  }
+
+  // upload cv
+  @ApiSuccessResponse(
+    UploadCvResponseDto,
+    'Upload CV successfully',
+    HttpStatus.CREATED,
+  )
   @UseGuards(JwtAuthGuard, RoleGuard)
   @Roles('CANDIDATE')
   @Post('upload')
@@ -37,5 +109,44 @@ export class CvController {
     const userId = req.user.sub;
 
     return this.cvService.uploadCv(userId, file);
+  }
+
+  // Get view url
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles('CANDIDATE')
+  @Get('versions/:cvVersionId/view-url')
+  getViewUrl(
+    @Param('cvVersionId') cvVersionId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    const userId = req.user.sub;
+
+    return this.cvService.getViewUrl(userId, cvVersionId);
+  }
+
+  // updateCv
+  @ApiSuccessResponse(UpdateCvResponseDto, 'Updated CV successfully')
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles('CANDIDATE')
+  @Patch(':cvId')
+  updateCv(
+    @Param('cvId') cvId: string,
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: UpdateCvDto,
+  ) {
+    const userId = req.user.sub;
+
+    return this.cvService.updateCv(userId, cvId, dto);
+  }
+
+  // delete cv
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard, RoleGuard)
+  @Roles('CANDIDATE')
+  @Delete(':cvId')
+  deleteCv(@Param('cvId') cvId: string, @Req() req: AuthenticatedRequest) {
+    const userId = req.user.sub;
+
+    return this.cvService.deleteCv(userId, cvId);
   }
 }
