@@ -27,4 +27,7 @@ export class CandidateEntity extends BaseAppEntity {
   @OneToOne(() => UserEntity)
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
+
+  @Column({ type: 'text', nullable: true })
+  image?: string | null;
 }

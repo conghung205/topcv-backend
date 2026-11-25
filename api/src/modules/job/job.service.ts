@@ -6,7 +6,7 @@ import {
 import { CreateJobDto } from './job.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CompanyEntity } from '../company/company.entity';
-import { DataSource, In, IsNull, Repository } from 'typeorm';
+import { DataSource, In, IsNull, Not, Repository } from 'typeorm';
 import { CompanyAddressEntity } from '../company/companyAddress.entity';
 import { CategoryEntity } from '../category/category.entity';
 import { JobEntity } from './entity/job.entity';
@@ -15,6 +15,8 @@ import {
   SearchPaginationQueryDto,
 } from '../../common/base/dto';
 import { JobAddressEntity } from './entity/jobAddress.entity';
+import { CandidateEntity } from '../candidate/candidate.entity';
+import { JobApplicationEntity } from '../jobApplication/jobApplication.entity';
 
 @Injectable()
 export class JobService {
@@ -25,8 +27,12 @@ export class JobService {
     private readonly companyRepository: Repository<CompanyEntity>,
     @InjectRepository(CompanyAddressEntity)
     private readonly companyAddressRepository: Repository<CompanyAddressEntity>,
+    @InjectRepository(CandidateEntity)
+    private readonly candidateRepository: Repository<CandidateEntity>,
     @InjectRepository(CategoryEntity)
     private readonly categoryRepository: Repository<CategoryEntity>,
+    @InjectRepository(JobApplicationEntity)
+    private readonly jobApplicationRepository: Repository<JobApplicationEntity>,
 
     private readonly dataSource: DataSource,
   ) {}
@@ -106,7 +112,24 @@ export class JobService {
   }
 
   // get one
-  async getJob(jobId: string) {
+  async getJob(jobId: string, userId: string | undefined) {
+    let application: JobApplicationEntity | null = null;
+    
+    if (userId) {
+      const candidate = await this.candidateRepository.findOneBy({
+        user_id: userId,
+        deleted_at: IsNull(),
+      });
+
+      if (candidate) {
+        application = await this.jobApplicationRepository.findOneBy({
+          job_id: jobId,
+          candidate_id: candidate.id,
+          status: Not(In(['WITHDRAWN', 'REJECTED'])),
+        });
+      }
+    }
+
     const job = await this.jobRepository
       .createQueryBuilder('job')
       .innerJoin('job.company', 'company', 'company.deleted_at IS NULL')
@@ -159,6 +182,8 @@ export class JobService {
       items: {
         ...job,
         jobAddresses: job.jobAddresses ?? [],
+        has_applied: !!application,
+        application_id: application?.id ?? null,
       },
     };
   }
@@ -212,7 +237,7 @@ export class JobService {
       return savedJob;
     });
 
-    return this.getJob(job.id);
+    return this.getJob(job.id, userId);
   }
 
   // update Job
@@ -336,7 +361,7 @@ export class JobService {
       }
     });
 
-    return this.getJob(jobId);
+    return this.getJob(jobId, userId);
   }
 
   // delete job

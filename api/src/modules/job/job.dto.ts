@@ -173,6 +173,9 @@ export class JobDetailDto {
 
   @ApiProperty({ type: [JobAddressResponseDto] })
   jobAddresses: JobAddressResponseDto[];
+
+  @ApiProperty()
+  has_applied: boolean;
 }
 
 export class JobDetailDataDto {

@@ -61,15 +61,15 @@ export class CvController {
   // get one
   @ApiSuccessResponse(CvDetailResponseDto, 'Get CV successfully')
   @UseGuards(JwtAuthGuard, RoleGuard)
-  @Roles('CANDIDATE')
+  @Roles('CANDIDATE', 'RECRUITER')
   @Get('versions/:cvVersionId')
   getCv(
     @Req() req: AuthenticatedRequest,
     @Param('cvVersionId') cvVersionId: string,
   ) {
-    const userId = req.user.sub;
+    const { sub, role } = req.user;
 
-    return this.cvService.getOneCv(userId, cvVersionId);
+    return this.cvService.getOneCv(sub, role, cvVersionId);
   }
 
   // create new cv
@@ -113,15 +113,15 @@ export class CvController {
 
   // Get view url
   @UseGuards(JwtAuthGuard, RoleGuard)
-  @Roles('CANDIDATE')
+  @Roles('CANDIDATE', 'RECRUITER')
   @Get('versions/:cvVersionId/view-url')
   getViewUrl(
     @Param('cvVersionId') cvVersionId: string,
     @Req() req: AuthenticatedRequest,
   ) {
-    const userId = req.user.sub;
+    const { sub, role } = req.user;
 
-    return this.cvService.getViewUrl(userId, cvVersionId);
+    return this.cvService.getViewUrl(sub, role, cvVersionId);
   }
 
   // updateCv

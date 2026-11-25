@@ -10,3 +10,7 @@ export type AccessTokenPayload = {
 export type AuthenticatedRequest = Request & {
   user: AccessTokenPayload;
 };
+
+export type OptionalAuthenticatedRequest = Request & {
+  user?: AccessTokenPayload;
+};

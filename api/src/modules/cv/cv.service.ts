@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -11,6 +12,7 @@ import { CandidateEntity } from '../candidate/candidate.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SearchPaginationQueryDto } from '../../common/base/dto';
 import { CreateCvDto, UpdateCvDto } from './dto/cvContent.dto';
+import { Role } from '../auth/type';
 
 @Injectable()
 export class CvService {
@@ -24,6 +26,47 @@ export class CvService {
     private readonly cloudinaryService: CloudinaryService,
     private readonly dataSource: DataSource,
   ) {}
+
+  private async checkCvAccess(
+    userId: string,
+    role: Role,
+    cvVersionId: string,
+  ): Promise<void> {
+    const query = this.cvVersionRepository
+      .createQueryBuilder('cv_version')
+      .where('cv_version.id = :cvVersionId', { cvVersionId });
+
+    if (role === 'CANDIDATE') {
+      query
+        .innerJoin('cv', 'cv', 'cv.id = cv_version.cv_id')
+        .innerJoin('candidate', 'candidate', 'candidate.id = cv.candidate_id')
+        .andWhere('candidate.user_id = :userId', { userId })
+        .andWhere('candidate.deleted_at IS NULL')
+        .andWhere('cv.deleted_at IS NULL');
+    } else if (role === 'RECRUITER') {
+      query
+        .innerJoin(
+          'job_application',
+          'application',
+          'application.cv_version_id = cv_version.id',
+        )
+        .innerJoin('job', 'job', 'job.id = application.job_id')
+        .innerJoin('company', 'company', 'company.id = job.company_id')
+        .andWhere('company.user_id = :userId', { userId })
+        .andWhere('company.deleted_at IS NULL')
+        .andWhere('application.status != :status', {
+          status: 'WITHDRAWN',
+        });
+    } else {
+      throw new ForbiddenException();
+    }
+
+    const hasAccess = await query.getExists();
+
+    if (!hasAccess) {
+      throw new NotFoundException('CV not found');
+    }
+  }
 
   // get list
   async getCvs(userId: string, query: SearchPaginationQueryDto) {
@@ -91,11 +134,13 @@ export class CvService {
   }
 
   // get one
-  async getOneCv(userId: string, cvVersionId: string) {
+  async getOneCv(userId: string, role: Role, cvVersionId: string) {
+    // checkCvAccess
+    await this.checkCvAccess(userId, role, cvVersionId);
+
     const cv = await this.cvRepository
       .createQueryBuilder('cv')
       .innerJoin('cv_version', 'cv_version', `cv_version.cv_id = cv.id`)
-      .innerJoin('candidate', 'candidate', 'candidate.id = cv.candidate_id')
       .select([
         'cv.id as id',
         'cv.title as title',
@@ -106,10 +151,8 @@ export class CvService {
         'cv.created_at AS created_at',
         'cv.modified_at AS modified_at',
       ])
-      .where('candidate.user_id = :userId', { userId })
-      .andWhere('cv_version.id = :cvVersionId', { cvVersionId })
+      .where('cv_version.id = :cvVersionId', { cvVersionId })
       .andWhere('cv.type = :type', { type: 'BUILDER' })
-      .andWhere('cv.deleted_at IS NULL')
       .getRawOne();
 
     if (!cv) throw new NotFoundException('CV not found');
@@ -269,15 +312,16 @@ export class CvService {
   }
 
   // get view url
-  async getViewUrl(userId: string, cvVersionId: string) {
+  async getViewUrl(userId: string, role: Role, cvVersionId: string) {
+    // checkCvAccess
+    await this.checkCvAccess(userId, role, cvVersionId);
+
     const version = await this.cvVersionRepository
       .createQueryBuilder('cv_version')
       .innerJoin('cv', 'cv', 'cv.id = cv_version.cv_id')
-      .innerJoin('candidate', 'candidate', 'candidate.id = cv.candidate_id')
       .select('cv_version.file_key', 'file_key')
       .where('cv_version.id = :cvVersionId', { cvVersionId })
-      .andWhere('candidate.user_id = :userId', { userId })
-      .andWhere('cv.deleted_at IS NULL')
+      .andWhere('cv.type = :type', { type: 'UPLOAD' })
       .getRawOne();
 
     if (!version?.file_key) {

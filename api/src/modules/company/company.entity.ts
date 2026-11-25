@@ -23,6 +23,9 @@ export class CompanyEntity extends BaseAppEntity {
   @Column({ type: 'text' })
   phone: string;
 
+  @Column({ type: 'text', nullable: true })
+  image?: string | null;
+
   @Column({ type: 'text' })
   website: string;
 

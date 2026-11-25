@@ -8,6 +8,8 @@ import { CompanyEntity } from '../company/company.entity';
 import { CompanyAddressEntity } from '../company/companyAddress.entity';
 import { CategoryEntity } from '../category/category.entity';
 import { JobAddressEntity } from './entity/jobAddress.entity';
+import { CandidateEntity } from '../candidate/candidate.entity';
+import { JobApplicationEntity } from '../jobApplication/jobApplication.entity';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { JobAddressEntity } from './entity/jobAddress.entity';
       CompanyEntity,
       CompanyAddressEntity,
       CategoryEntity,
+      CandidateEntity,
+      JobApplicationEntity,
     ]),
     AuthModule,
   ],
