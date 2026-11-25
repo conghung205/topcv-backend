@@ -176,6 +176,12 @@ export class JobDetailDto {
 
   @ApiProperty()
   has_applied: boolean;
+
+  @ApiProperty()
+  application_id: string | null;
+
+  @ApiProperty()
+  has_saved: boolean;
 }
 
 export class JobDetailDataDto {
@@ -191,6 +197,8 @@ export class JobListItemDto extends OmitType(JobDetailDto, [
   'min_salary',
   'max_salary',
   'created_at',
+  'has_applied',
+  'application_id',
 ] as const) {}
 
 export class JobListDataDto {

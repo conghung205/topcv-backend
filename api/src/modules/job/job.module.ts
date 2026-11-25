@@ -10,6 +10,7 @@ import { CategoryEntity } from '../category/category.entity';
 import { JobAddressEntity } from './entity/jobAddress.entity';
 import { CandidateEntity } from '../candidate/candidate.entity';
 import { JobApplicationEntity } from '../jobApplication/jobApplication.entity';
+import { SavedJobEntity } from '../saveJob/savedJob.entity';
 
 @Module({
   imports: [
@@ -21,10 +22,12 @@ import { JobApplicationEntity } from '../jobApplication/jobApplication.entity';
       CategoryEntity,
       CandidateEntity,
       JobApplicationEntity,
+      SavedJobEntity,
     ]),
     AuthModule,
   ],
   controllers: [JobController],
   providers: [JobService],
+  exports: [JobService],
 })
 export class JobModule {}

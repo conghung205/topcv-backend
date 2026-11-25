@@ -17,6 +17,7 @@ import {
 import { JobAddressEntity } from './entity/jobAddress.entity';
 import { CandidateEntity } from '../candidate/candidate.entity';
 import { JobApplicationEntity } from '../jobApplication/jobApplication.entity';
+import { SavedJobEntity } from '../saveJob/savedJob.entity';
 
 @Injectable()
 export class JobService {
@@ -33,20 +34,48 @@ export class JobService {
     private readonly categoryRepository: Repository<CategoryEntity>,
     @InjectRepository(JobApplicationEntity)
     private readonly jobApplicationRepository: Repository<JobApplicationEntity>,
+    @InjectRepository(SavedJobEntity)
+    private readonly savedJobRepository: Repository<SavedJobEntity>,
 
     private readonly dataSource: DataSource,
   ) {}
 
   // get many
-  async getJobs(query: SearchPaginationQueryDto) {
+  async getJobs(
+    userId: string | undefined,
+    query: SearchPaginationQueryDto,
+    savedByCandidateId?: string,
+  ) {
     const { page, limit } = query;
     const search = query.search?.trim();
+
+    // find candidateId
+    let candidateId = savedByCandidateId ?? null;
+    if (!candidateId && userId) {
+      const candidate = await this.candidateRepository.findOneBy({
+        user_id: userId,
+        deleted_at: IsNull(),
+      });
+
+      candidateId = candidate?.id ?? null;
+    }
 
     const baseQuery = this.jobRepository
       .createQueryBuilder('job')
       .innerJoin('job.company', 'company', 'company.deleted_at IS NULL')
       .innerJoin('job.category', 'category', 'category.deleted_at IS NULL')
       .where('job.deleted_at IS NULL');
+
+    if (savedByCandidateId) {
+      baseQuery.innerJoin(
+        'saved_job',
+        'saved',
+        `saved.job_id = job.id
+          AND saved.candidate_id = :candidateId
+          AND saved.deleted_at IS NULL`,
+        { candidateId: savedByCandidateId },
+      );
+    }
 
     if (search) {
       baseQuery.andWhere('job.title ILIKE :search', {
@@ -89,6 +118,17 @@ export class JobService {
           )
         ) FILTER (WHERE "companyAddress"."id" IS NOT NULL) AS "jobAddresses"`,
       ])
+      .addSelect(
+        `EXISTS (
+          SELECT 1
+          FROM saved_job sj
+          WHERE sj.job_id = job.id
+            AND sj.candidate_id = :viewerCandidateId
+            AND sj.deleted_at IS NULL
+        )`,
+        'has_saved',
+      )
+      .setParameter('viewerCandidateId', candidateId)
       .groupBy('job.id')
       .addGroupBy('company.id')
       .addGroupBy('category.id')
@@ -114,7 +154,8 @@ export class JobService {
   // get one
   async getJob(jobId: string, userId: string | undefined) {
     let application: JobApplicationEntity | null = null;
-    
+    let hasSaved = false;
+
     if (userId) {
       const candidate = await this.candidateRepository.findOneBy({
         user_id: userId,
@@ -126,6 +167,12 @@ export class JobService {
           job_id: jobId,
           candidate_id: candidate.id,
           status: Not(In(['WITHDRAWN', 'REJECTED'])),
+        });
+
+        hasSaved = await this.savedJobRepository.existsBy({
+          candidate_id: candidate.id,
+          job_id: jobId,
+          deleted_at: IsNull(),
         });
       }
     }
@@ -184,6 +231,7 @@ export class JobService {
         jobAddresses: job.jobAddresses ?? [],
         has_applied: !!application,
         application_id: application?.id ?? null,
+        has_saved: hasSaved,
       },
     };
   }

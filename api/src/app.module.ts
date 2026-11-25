@@ -11,6 +11,7 @@ import { CompanyModule } from './modules/company/company.module';
 import { JobModule } from './modules/job/job.module';
 import { CvModule } from './modules/cv/cv.module';
 import { JobApplicationModule } from './modules/jobApplication/jobApplication.module';
+import { SavedJobModule } from './modules/saveJob/savedJob.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { JobApplicationModule } from './modules/jobApplication/jobApplication.mo
     JobModule,
     CvModule,
     JobApplicationModule,
+    SavedJobModule,
   ],
   controllers: [],
   providers: [AppService, ResponseInterceptor],

@@ -27,10 +27,7 @@ import type {
 import { JwtAuthGuard } from '../auth/guards/jwtAuth.guard';
 import { RoleGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/guards/roles.decorator';
-import {
-  PaginationQueryDto,
-  SearchPaginationQueryDto,
-} from '../../common/base/dto';
+import { SearchPaginationQueryDto } from '../../common/base/dto';
 import { ApiSuccessResponse } from '../../common/decorators/apiSuccessResponse';
 import { OptionalJwtAuthGuard } from '../auth/guards/OptionalJwtAuth.guard';
 
@@ -48,9 +45,13 @@ export class JobController {
     type: String,
   })
   @ApiSuccessResponse(JobListDataDto, 'Get jobs successfully')
+  @UseGuards(OptionalJwtAuthGuard)
   @Get()
-  getJobs(@Query() query: SearchPaginationQueryDto) {
-    return this.jobService.getJobs(query);
+  getJobs(
+    @Req() req: OptionalAuthenticatedRequest,
+    @Query() query: SearchPaginationQueryDto,
+  ) {
+    return this.jobService.getJobs(req.user?.sub, query);
   }
 
   // find one OptionalJwtAuthGuard
