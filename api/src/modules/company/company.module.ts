@@ -7,6 +7,7 @@ import { UserEntity } from '../auth/user.entity';
 import { AuthModule } from '../auth/auth.module';
 import { CompanyAddressEntity } from './companyAddress.entity';
 import { WardEntity } from '../province/ward.entity';
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { WardEntity } from '../province/ward.entity';
       WardEntity,
     ]),
     AuthModule,
+    CloudinaryModule,
   ],
   controllers: [CompanyController],
   providers: [CompanyService],

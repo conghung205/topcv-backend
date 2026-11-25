@@ -5,11 +5,18 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CandidateEntity } from './candidate.entity';
-import { DataSource, DeepPartial, QueryFailedError, Repository } from 'typeorm';
+import {
+  DataSource,
+  DeepPartial,
+  IsNull,
+  QueryFailedError,
+  Repository,
+} from 'typeorm';
 import { Role } from '../auth/type';
 import { UserEntity } from '../auth/user.entity';
 import { WardEntity } from '../province/ward.entity';
 import { UpdateCandidateDto } from './candidate.dto';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class CandidateService {
@@ -17,6 +24,7 @@ export class CandidateService {
     @InjectRepository(CandidateEntity)
     private readonly candidateRepository: Repository<CandidateEntity>,
     private dataSource: DataSource,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   async getMe(userId: string) {
@@ -98,5 +106,38 @@ export class CandidateService {
     }
 
     return this.getMe(userId);
+  }
+
+  // update image
+  async uploadImage(userId: string, file: Express.Multer.File) {
+    const candidate = await this.candidateRepository.findOneBy({
+      user_id: userId,
+      deleted_at: IsNull(),
+    });
+    if (!candidate) throw new NotFoundException();
+
+    // upload to cloudinary
+    const upload = await this.cloudinaryService.uploadAvatar(file.buffer);
+
+    // update db
+    const result = await this.candidateRepository.update(
+      {
+        id: candidate.id,
+        deleted_at: IsNull(),
+      },
+      {
+        image: upload.secure_url,
+        modified_at: new Date(),
+        modified_by: userId,
+      },
+    );
+
+    if (result.affected !== 1) {
+      throw new NotFoundException('Candidate not found');
+    }
+
+    return {
+      image: upload.secure_url,
+    };
   }
 }

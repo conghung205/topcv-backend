@@ -3,6 +3,7 @@ import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary';
 
 @Injectable()
 export class CloudinaryService {
+  // upload avatar
   uploadAvatar(buffer: Buffer): Promise<UploadApiResponse> {
     return new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(

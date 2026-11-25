@@ -40,3 +40,10 @@ export abstract class BaseListResponseDto<T> {
 
   abstract meta: BasePaginationMetaDto;
 }
+
+export class UploadImageResponseDto {
+  @ApiProperty({
+    example: 'https://res.cloudinary.com/example/image/upload/avatar.jpg',
+  })
+  image: string;
+}

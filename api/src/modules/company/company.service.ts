@@ -12,6 +12,7 @@ import { CompanyAddressEntity } from './companyAddress.entity';
 import { WardEntity } from '../province/ward.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UpdateCompanyDto } from './company.dto';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class CompanyService {
@@ -21,6 +22,7 @@ export class CompanyService {
     @InjectRepository(CompanyAddressEntity)
     private readonly companyAddressRepository: Repository<CompanyAddressEntity>,
     private readonly dataSource: DataSource,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
   async getMe(userId: string) {
     const company = await this.companyRepository
@@ -223,5 +225,38 @@ export class CompanyService {
     }
 
     return this.getMe(userId);
+  }
+
+  // update image
+  async uploadImage(userId: string, file: Express.Multer.File) {
+    const company = await this.companyRepository.findOneBy({
+      user_id: userId,
+      deleted_at: IsNull(),
+    });
+    if (!company) throw new NotFoundException();
+
+    // upload to cloudinary
+    const upload = await this.cloudinaryService.uploadAvatar(file.buffer);
+
+    // update db
+    const result = await this.companyRepository.update(
+      {
+        id: company.id,
+        deleted_at: IsNull(),
+      },
+      {
+        image: upload.secure_url,
+        modified_at: new Date(),
+        modified_by: userId,
+      },
+    );
+
+    if (result.affected !== 1) {
+      throw new NotFoundException('company not found');
+    }
+
+    return {
+      image: upload.secure_url,
+    };
   }
 }
