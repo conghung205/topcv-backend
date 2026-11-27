@@ -8,6 +8,8 @@ import { UserEntity } from './user.entity';
 import { CompanyAddressEntity } from '../company/companyAddress.entity';
 import { RefreshTokenEntity } from './refreshToken.entity';
 import { JwtModule } from '@nestjs/jwt';
+import { RedisModule } from '../redis/redis.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { JwtModule } from '@nestjs/jwt';
       CompanyAddressEntity,
       RefreshTokenEntity,
     ]),
+    RedisModule,
+    MailModule,
   ],
   controllers: [AuthController],
   providers: [AuthService],

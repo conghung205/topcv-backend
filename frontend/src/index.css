@@ -1,0 +1,336 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+    --color-primary: #15b75d;
+    --color-title: #2fff8c;
+    --color-text: var(--text-body);
+    --color-description: #f4f4f4;
+    --color-text-secondary: var(--text-secondary-copy);
+    --color-bg-main: #f7f8fa;
+    --color-bg-text: #e2e2e2;
+    --color-bg-text-hover: #d4d4d4;
+    --color-border: #e0e0e0;
+    --shadow-dropdown: 0 2px 6px 0 rgba(0, 0, 0, 0.2), 0 2px 6px 0 rgba(0, 0, 0, 0.19);
+}
+
+@theme inline {
+    /* Map Tailwind's neutral text utilities to the app's semantic palette. */
+    --color-gray-950: var(--text-ink);
+    --color-gray-900: var(--text-ink);
+    --color-gray-800: var(--text-body);
+    --color-gray-700: var(--text-secondary-copy);
+    --color-gray-600: var(--text-secondary-copy);
+    --color-gray-500: var(--text-muted-copy);
+    --color-gray-400: var(--text-muted-copy);
+    --color-black: var(--text-ink);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-ink: var(--text-ink);
+    --color-body: var(--text-body);
+    --color-secondary-copy: var(--text-secondary-copy);
+    --color-muted-copy: var(--text-muted-copy);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+    /* Semantic text colors: professional charcoal/slate tones, never pure black. */
+    --text-ink: #1e293b;
+    --text-body: #334155;
+    --text-secondary-copy: #475569;
+    --text-muted-copy: #64748b;
+    --radius: 0.625rem;
+    --background: #f7f8fa;
+    --foreground: var(--text-body);
+    --card: oklch(1 0 0);
+    --card-foreground: var(--text-body);
+    --popover: oklch(1 0 0);
+    --popover-foreground: var(--text-body);
+    --primary: #15b75d;
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: var(--text-body);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: var(--text-body);
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --chart-1: oklch(0.646 0.222 41.116);
+    --chart-2: oklch(0.6 0.118 184.704);
+    --chart-3: oklch(0.398 0.07 227.392);
+    --chart-4: oklch(0.828 0.189 84.429);
+    --chart-5: oklch(0.769 0.188 70.08);
+}
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+html, body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        @apply bg-background;
+        color: var(--text-body);
+        margin: 0;
+        padding: 0;
+    }
+
+    html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 84px;
+    }
+}
+
+@layer utilities {
+    /* Keep display headings strong without using an overly heavy weight. */
+    .font-black {
+        font-weight: 700;
+    }
+}
+
+.cv-range,
+.cv-range:hover,
+.cv-range:focus {
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+}
+
+.cv-range::-webkit-slider-runnable-track {
+    height: 0.5rem;
+    border-radius: 9999px;
+}
+
+.cv-range::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1rem;
+    height: 1rem;
+    margin-top: -0.25rem;
+    border: 2px solid var(--primary);
+    border-radius: 9999px;
+    background: var(--primary);
+    box-shadow: none;
+}
+
+.cv-range::-moz-range-track {
+    height: 0.5rem;
+    border-radius: 9999px;
+}
+
+.cv-range::-moz-range-thumb {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--primary);
+    border-radius: 9999px;
+    background: var(--primary);
+    box-shadow: none;
+}
+
+[aria-invalid="true"] {
+    border-color: #ef4444 !important;
+}
+
+/* Custom CKEditor 5 Styling */
+.ckeditor-container {
+    width: 100%;
+}
+
+.ckeditor-container .ck-editor__top .ck-toolbar {
+    border-radius: 12px 12px 0 0 !important;
+    border-color: #e2e8f0 !important;
+    background-color: #f8fafc !important;
+    padding: 6px 8px !important;
+}
+
+.ckeditor-container .ck-editor__main > .ck-editor__editable {
+    border-radius: 0 0 12px 12px !important;
+    border-color: #e2e8f0 !important;
+    min-height: var(--ck-min-height, 160px);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    padding: 12px 16px !important;
+    color: #1e293b;
+    background-color: #ffffff !important;
+}
+
+.ckeditor-container .ck-editor__main > .ck-editor__editable.ck-focused {
+    border-color: #00b14f !important;
+    box-shadow: 0 0 0 3px rgba(0, 177, 79, 0.15) !important;
+}
+
+.ckeditor-container .ck-content ul {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+}
+
+.ckeditor-container .ck-content ol {
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+}
+
+.ckeditor-container .ck-content h2 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0.75rem 0 0.5rem 0;
+    color: #0f172a;
+}
+
+.ckeditor-container .ck-content h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0.5rem 0 0.25rem 0;
+    color: #1e293b;
+}
+
+.ckeditor-container .ck-content blockquote {
+    border-left: 4px solid #00b14f;
+    padding-left: 1rem;
+    margin: 0.5rem 0;
+    color: #64748b;
+    font-style: italic;
+}
+
+/* Swiper TopCV Banner */
+.topcv-banner-swiper {
+    width: 100%;
+    height: 100%;
+}
+
+.topcv-banner-swiper .swiper-slide {
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+
+.topcv-banner-swiper .swiper-pagination {
+    bottom: 12px !important;
+}
+
+.topcv-banner-swiper .swiper-pagination-bullet {
+    background: rgba(255, 255, 255, 0.7) !important;
+    opacity: 0.8 !important;
+    width: 8px !important;
+    height: 8px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border-radius: 9999px !important;
+}
+
+.topcv-banner-swiper .swiper-pagination-bullet-active {
+    background: #00b14f !important;
+    width: 26px !important;
+    opacity: 1 !important;
+}
+
+.campaign-swiper .swiper-pagination {
+    bottom: 28px !important;
+}
+
+.campaign-swiper .swiper-pagination-bullet {
+    width: 8px !important;
+    height: 8px !important;
+    background: #64748b !important;
+    opacity: 1 !important;
+}
+
+.campaign-swiper .swiper-pagination-bullet-active {
+    background: #ffffff !important;
+}
+
+/* CV Preview HTML Renderer Styling */
+.cv-rich-content {
+    line-height: 1.55;
+    color: inherit;
+}
+.cv-rich-content p {
+    margin-bottom: 0.35rem;
+}
+.cv-rich-content p:last-child {
+    margin-bottom: 0;
+}
+.cv-rich-content ul {
+    list-style-type: disc !important;
+    padding-left: 1.15rem !important;
+    margin-top: 0.25rem;
+    margin-bottom: 0.35rem;
+}
+.cv-rich-content ol {
+    list-style-type: decimal !important;
+    padding-left: 1.15rem !important;
+    margin-top: 0.25rem;
+    margin-bottom: 0.35rem;
+}
+.cv-rich-content li {
+    margin-bottom: 0.2rem;
+    line-height: 1.5;
+}
+.cv-rich-content strong,
+.cv-rich-content b {
+    font-weight: 700;
+    color: #111827;
+}
+.cv-rich-content em,
+.cv-rich-content i {
+    font-style: italic;
+}
+.cv-rich-content a {
+    color: #00b14f;
+    text-decoration: underline;
+}
+
+/* CV ContentEditable Placeholder Styling */
+[contenteditable][data-placeholder]:empty::before {
+    content: attr(data-placeholder);
+    color: #9ca3af; /* text-gray-400 */
+    pointer-events: none;
+    cursor: text;
+    display: inline-block;
+}
+
+[contenteditable][data-placeholder]:empty:focus::before {
+    color: #cbd5e1; /* text-slate-300 */
+}
+
+@media print {
+    [contenteditable][data-placeholder]:empty::before {
+        display: none !important;
+    }
+}

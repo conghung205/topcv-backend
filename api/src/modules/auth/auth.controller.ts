@@ -16,6 +16,11 @@ import {
   RefreshTokenResponseDto,
 } from './dto/refreshToken.dto';
 import { LogoutResponseDto } from './dto/logout.dto';
+import {
+  ResendVerificationEmailDto,
+  VerifyEmailDto,
+  VerifyEmailResponseDto,
+} from './dto/verifyEmail.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -69,5 +74,22 @@ export class AuthController {
   @Post('refresh-token')
   refreshToken(@Body() dto: RefreshTokenDto) {
     return this.authService.refreshToken(dto);
+  }
+
+  // verify email
+  @ApiOkResponse({ type: VerifyEmailResponseDto })
+  @Post('verify-email')
+  @HttpCode(200)
+  @ResponseMessage('Email verified successfully')
+  verifyEmail(@Body() dto: VerifyEmailDto) {
+    return this.authService.verifyEmail(dto);
+  }
+
+  // resend email
+  @Post('resend-verification')
+  @HttpCode(200)
+  @ResponseMessage('Verification email requested successfully')
+  resendVerificationEmail(@Body() dto: ResendVerificationEmailDto) {
+    return this.authService.resendVerificationEmail(dto);
   }
 }

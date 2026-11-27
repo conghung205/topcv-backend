@@ -4,9 +4,16 @@ import {
   EntityManager,
   IsNull,
   MoreThan,
+  Not,
   Repository,
 } from 'typeorm';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
 import { RegisterCandidateDto } from './dto/registerCandidate.dto';
 import { RegisterCompanyDto } from './dto/registerCompany.dto';
@@ -19,6 +26,13 @@ import { CompanyEntity } from '../company/company.entity';
 import { CompanyAddressEntity } from '../company/companyAddress.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RefreshTokenDto } from './dto/refreshToken.dto';
+import { RedisService } from '../redis/redis.service';
+import { MailProducer } from '../mail/mail.producer';
+import { createHash, randomBytes } from 'node:crypto';
+import {
+  ResendVerificationEmailDto,
+  VerifyEmailDto,
+} from './dto/verifyEmail.dto';
 
 @Injectable()
 export class AuthService {
@@ -29,10 +43,14 @@ export class AuthService {
     private readonly userRepository: Repository<UserEntity>,
     @InjectRepository(RefreshTokenEntity)
     private readonly refreshTokenRepository: Repository<RefreshTokenEntity>,
-    private jwtService: JwtService,
-    private dataSource: DataSource,
+
+    private readonly jwtService: JwtService,
+    private readonly dataSource: DataSource,
+    private readonly redisService: RedisService,
+    private readonly mailProducer: MailProducer,
   ) {}
 
+  // =========== common ============
   // save refresh token and generate accessToken
   private async issueTokens(
     manager: EntityManager,
@@ -61,6 +79,24 @@ export class AuthService {
     return new Date(Date.now() + this.ttlDays * 24 * 60 * 60 * 1000);
   }
 
+  // send mail
+  private async sendVerificationEmail(userId: string, email: string) {
+    const token = randomBytes(32).toString('hex');
+
+    const tokenHash = createHash('sha256').update(token).digest('hex');
+
+    await this.redisService.set(`verify-email:${tokenHash}`, userId, 1800);
+
+    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
+
+    await this.mailProducer.addEmail(
+      email,
+      'Verify your email',
+      `<a href="${verifyUrl}">Verify your email</a>`,
+    );
+  }
+  // =============== end common =======================
+
   // Create Candidate
   async registerCandidate(dto: RegisterCandidateDto) {
     const hashPassword = await bcrypt.hash(dto.password, 10);
@@ -82,20 +118,22 @@ export class AuthService {
         phone: dto.phone,
       });
 
-      // save refresh token and generate accessToken
-      const tokens = await this.issueTokens(manager, user);
-
       return {
         user_id: user.id,
         candidate_id: candidate.id,
         email: user.email,
         name: candidate.name,
         phone: candidate.phone,
-        ...tokens,
       };
     });
 
-    return result;
+    // send verify email
+    await this.sendVerificationEmail(result.user_id, result.email);
+
+    return {
+      ...result,
+      email_verified: false,
+    };
   }
 
   // Create Company
@@ -128,20 +166,22 @@ export class AuthService {
         address_detail: dto.address_detail,
       });
 
-      // save refresh token and generate accessToken
-      const tokens = await this.issueTokens(manager, user);
-
       return {
         user_id: user.id,
         company_id: company.id,
         name: company.name,
         email: user.email,
         phone: company.phone,
-        ...tokens,
       };
     });
 
-    return result;
+    // send verify email
+    await this.sendVerificationEmail(result.user_id, result.email);
+
+    return {
+      ...result,
+      email_verified: false,
+    };
   }
 
   //login
@@ -161,11 +201,13 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    // generateRefreshToken
-    const newRefreshToken = generateRefreshToken();
+    // Check user has verified email.
+    if (!user.email_verified_at) {
+      throw new ForbiddenException('Please verify your email');
+    }
 
-    const result = await this.dataSource.transaction(async (manager) => {
-      // save refresh token
+    // save refresh token and generate accessToken
+    const token = await this.dataSource.transaction(async (manager) => {
       return this.issueTokens(manager, user);
     });
 
@@ -174,7 +216,7 @@ export class AuthService {
       email: user.email,
       active: user.active,
       created_at: user.created_at,
-      ...result,
+      ...token,
     };
   }
 
@@ -207,13 +249,13 @@ export class AuthService {
       id: storedToken.user_id,
       active: true,
       deleted_at: IsNull(),
+      email_verified_at: Not(IsNull()),
     });
 
     if (!user) {
       throw new UnauthorizedException();
     }
 
-    const newRefreshToken = generateRefreshToken();
     const now = new Date();
 
     const result = await this.dataSource.transaction(async (manager) => {
@@ -235,5 +277,80 @@ export class AuthService {
     });
 
     return result;
+  }
+
+  // verify email
+  async verifyEmail(dto: VerifyEmailDto) {
+    const tokenHash = createHash('sha256').update(dto.token).digest('hex');
+
+    const userId = await this.redisService.getDel(`verify-email:${tokenHash}`);
+    if (!userId) {
+      throw new BadRequestException('Invalid or expired token');
+    }
+
+    // result
+    const result = await this.dataSource.transaction(async (manager) => {
+      const user = await manager.findOneBy(UserEntity, {
+        id: userId,
+        active: true,
+        deleted_at: IsNull(),
+        email_verified_at: IsNull(),
+      });
+      if (!user) {
+        throw new BadRequestException('Unable to verify email');
+      }
+
+      // update email_verified_at
+      const updateUser = await manager.update(
+        UserEntity,
+        {
+          id: user.id,
+          active: true,
+          deleted_at: IsNull(),
+          email_verified_at: IsNull(),
+        },
+        {
+          email_verified_at: new Date(),
+        },
+      );
+      if (updateUser.affected !== 1) {
+        throw new ConflictException('Unable to verify email');
+      }
+
+      // save refresh token and generate accessToken
+      const tokens = await this.issueTokens(manager, user);
+
+      return {
+        user_id: user.id,
+        email: user.email,
+        role: user.role,
+        email_verified: true,
+        ...tokens,
+      };
+    });
+
+    return result;
+  }
+
+  // resend email
+  async resendVerificationEmail(dto: ResendVerificationEmailDto) {
+    const user = await this.userRepository.findOneBy({
+      email: dto.email,
+      active: true,
+      deleted_at: IsNull(),
+      email_verified_at: IsNull(),
+    });
+
+    if (!user) return;
+
+    const result = await this.redisService.setIfNotExists(
+      `resend-verification:${user.id}`,
+      '1',
+      60,
+    );
+
+    if (!result) return;
+
+    await this.sendVerificationEmail(user.id, user.email);
   }
 }

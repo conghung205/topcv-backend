@@ -40,11 +40,8 @@ export class RegisterCandidateDataDto {
   @ApiProperty({ type: String, nullable: true, example: null })
   phone: string | null;
 
-  @ApiProperty({ example: '<access_token>' })
-  access_token: string;
-
-  @ApiProperty({ example: '<refresh_token>' })
-  refresh_token: string;
+  @ApiProperty({ example: false })
+  email_verified: boolean;
 }
 
 export class RegisterCandidateResponseDto {

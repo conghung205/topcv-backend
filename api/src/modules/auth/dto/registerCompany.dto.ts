@@ -53,11 +53,8 @@ export class RegisterCompanyDataDto {
   @ApiProperty({ example: '0912345678' })
   phone: string;
 
-  @ApiProperty({ example: '<access_token>' })
-  access_token: string;
-
-  @ApiProperty({ example: '<refresh_token>' })
-  refresh_token: string;
+  @ApiProperty({ example: false })
+  email_verified: boolean;
 }
 
 export class RegisterCompanyResponseDto {

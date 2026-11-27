@@ -10,4 +10,6 @@ export class UserEntity extends BaseAppEntity {
   password: string;
   @Column({ type: 'text' })
   role: Role;
+  @Column({ type: 'timestamptz', nullable: true })
+  email_verified_at: Date | null;
 }
